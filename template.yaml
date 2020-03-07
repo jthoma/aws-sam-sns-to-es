@@ -1,0 +1,45 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  aws-sam-sns-to-es
+
+  SAM Template for aws-sam-sns-to-es
+  
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Globals:
+  Function:
+    Timeout: 10
+
+Resources:
+  # remove this resource if SNS is already created and add the arn to event section 
+  triggerSNS:
+    Type: AWS::SNS::Topic
+    Properties: 
+      DisplayName: <display-name> # change to whatever you want
+      TopicName: <topic-name> # change to whatever you want  
+  snstoesFn:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      FunctionName: sns-to-es
+      CodeUri: src/
+      Handler: app.handler
+      Runtime: nodejs12.x
+      Environment:
+        Variables:
+          elasticEndpoint: <elastic-endpoint> # change to whatever
+      Events:
+        triggersnstopic:
+          Type: SNS 
+          Properties:
+            Topic: !Ref triggerSNS
+
+Outputs:
+  SNSOutput:
+    Description: "Created SNS ARN"
+    Value: !Ref triggerSNS
+  FnSNStoESOutput:
+    Description: "sns-to-es Lambda Function ARN"
+    Value: !GetAtt snstoesFn.Arn
+  FnSNStoESIamRoleOutput:
+    Description: "Implicit IAM Role created for sns-to-es function"
+    Value: !GetAtt snstoesFnRole.Arn
